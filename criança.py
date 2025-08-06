@@ -15,61 +15,87 @@ mapear_emojis = {'A': '🔵', 'E': '🟡', 'V': '🔴'}
 def analisar_padrao(historico):
     """
     Analisa o histórico e retorna o padrão detectado e a sugestão de aposta.
+    A lógica agora prioriza a análise de padrões de Empate.
     """
     if len(historico) < 2:
         return "Nenhum Padrão Detectado", "Insira mais resultados para iniciar a análise."
 
     # Invertemos o histórico para analisar do mais recente para o mais antigo
-    hist_recente = historico[::-1]
+    hist_recente = list(historico)[::-1]
 
-    # --- Padrão de Alternância Simples (Ping-Pong) ---
-    if len(hist_recente) >= 4 and hist_recente[0] != hist_recente[1] and hist_recente[1] != hist_recente[2] and hist_recente[2] != hist_recente[3]:
-        count_ping_pong = 0
-        for i in range(len(hist_recente) - 1):
-            if hist_recente[i] != hist_recente[i+1]:
-                count_ping_pong += 1
-            else:
-                break
-        if count_ping_pong >= 4:
-            sugestao = f"Padrão de Ping-Pong detectado com {count_ping_pong+1} alternâncias. A IA pode quebrar este padrão agora. Sugestão: Aposte contra a alternância (ex: se o último foi {mapear_emojis[hist_recente[0]]}, aposte em {mapear_emojis[hist_recente[0]]} novamente)."
-            return "1. Alternância Simples (Ping-Pong)", sugestao
-    
-    # --- Padrão de Sequência Estendida ---
-    if len(hist_recente) >= 3 and hist_recente[0] == hist_recente[1] == hist_recente[2]:
-        repeticao = hist_recente[0]
-        count_seq = 0
-        for resultado in hist_recente:
-            if resultado == repeticao:
-                count_seq += 1
-            else:
-                break
-        sugestao = f"Sequência estendida de {count_seq} resultados de {mapear_emojis[repeticao]}. A IA força você a acreditar que 'vai virar'. Sugestão: Mantenha a aposta na continuação até a quebra, ou aguarde a quebra e inverta."
-        return "2. Sequência Estendida", sugestao
-    
-    # --- Padrão de Âncora com Empate ---
-    if len(hist_recente) >= 3 and 'E' in hist_recente[:3] and hist_recente[0] != 'E' and hist_recente[2] != 'E' and hist_recente[1] == 'E':
-        sugestao = f"Empate ({mapear_emojis['E']}) inserido no meio da sequência. A IA usa o empate para resetar a leitura e quebrar ciclos mentais. Sugestão: Reavalie o padrão. A tendência pode mudar agora."
-        return "3. Âncora com Empate", sugestao
-    
-    # --- Padrão Camuflado de Ciclo 3-1 ---
-    if len(hist_recente) >= 4:
-        if (hist_recente[0:3] == [hist_recente[0], hist_recente[0], hist_recente[0]] and hist_recente[3] != hist_recente[0]):
-            sugestao = f"Ciclo 3-1 detectado ({mapear_emojis[hist_recente[0]]}, {mapear_emojis[hist_recente[0]]}, {mapear_emojis[hist_recente[0]]}, {mapear_emojis[hist_recente[3]]}). A IA tende a inverter o ciclo quando as apostas aumentam. Sugestão: Esteja preparado para a inversão."
+    # --- ANÁLISE PRIORITÁRIA DE PADRÕES DE EMPATE (🟡) ---
+    if 'E' in hist_recente[0]:
+        # 1. Empate como Reset de Padrão (Ex.: 🔵🔵🔵🟡)
+        if len(hist_recente) >= 4 and hist_recente[1] == hist_recente[2] == hist_recente[3] and hist_recente[1] != 'E':
+            lado_dominante = mapear_emojis[hist_recente[1]]
+            lado_oposto = mapear_emojis['V' if lado_dominante == '🔵' else 'A'] if lado_dominante != '🟡' else 'N/A'
+            sugestao = f"Padrão de Reset de Padrão (🟡) detectado após sequência de {lado_dominante}. A IA tende a inverter a tendência. Sugestão: Aposte no lado oposto ({lado_oposto})."
+            return "Empate 1. Reset de Padrão", sugestao
+
+    # 2. Empate como Âncora no Meio (Ex.: 🔵🔴🟡🔴🔵)
+    if len(hist_recente) >= 3 and hist_recente[1] == 'E' and hist_recente[0] != hist_recente[2]:
+        sugestao = f"Empate ({mapear_emojis['E']}) como âncora no meio de uma alternância. A IA continua a alternância. Sugestão: Siga a alternância, aposte em ({mapear_emojis[hist_recente[2]]})."
+        return "Empate 2. Âncora no Meio", sugestao
+
+    # 3. Empate Duplo Estratégico (Ex.: 🔴🟡🔵🟡)
+    if len(hist_recente) >= 4 and hist_recente[0] == 'E' and hist_recente[2] == 'E':
+        lado_vencedor = mapear_emojis[hist_recente[1]]
+        sugestao = f"Empate Duplo Estratégico ({mapear_emojis['E']}) detectado. A IA pode forçar uma sequência forte agora. Sugestão: Aposte na repetição do último lado a vencer ({lado_vencedor})."
+        return "Empate 3. Duplo Estratégico", sugestao
+
+    # 4. Empate como Isca de Virada (Ex.: 🔵🔵🟡🔴🔴🔴)
+    if len(hist_recente) >= 4 and hist_recente[1] == 'E' and hist_recente[0] == hist_recente[2] and hist_recente[0] != hist_recente[3]:
+        lado_dominante = mapear_emojis[hist_recente[3]]
+        lado_novo = mapear_emojis[hist_recente[0]]
+        sugestao = f"Empate ({mapear_emojis['E']}) como isca de virada. A IA mudou radicalmente o padrão. Sugestão: Acompanhe a nova tendência ({lado_novo})."
+        return "Empate 4. Isca de Virada", sugestao
+
+    # 5. Empate no Início do Ciclo (Ex.: 🟡🔴🔵)
+    if len(hist_recente) >= 3 and hist_recente[2] == 'E':
+        sugestao = f"Empate ({mapear_emojis['E']}) no início do ciclo. A IA pode usar isto para embaralhar a leitura. Sugestão: Observe as próximas duas jogadas ({mapear_emojis[hist_recente[1]]}{mapear_emojis[hist_recente[0]]}) e, se forem diferentes, aposte no segundo lado ({mapear_emojis[hist_recente[0]]})."
+        return "Empate 5. Início do Ciclo", sugestao
+
+    # --- ANÁLISE DOS PADRÕES SEM EMPATE RECENTE ---
+    # Garante que não há empates recentes para evitar conflito com a lógica acima
+    if 'E' not in hist_recente[:6]:
+
+        # Padrão Espelho
+        if len(hist_recente) >= 6 and hist_recente[0:3] == hist_recente[3:6][::-1]:
+            sugestao = "Padrão Espelho detectado. A IA inverte a sequência para confundir sua leitura. Sugestão: Não confie na repetição exata do padrão."
+            return "7. Espelho", sugestao
+
+        # Padrão Camuflado de Ciclo 3-1
+        if len(hist_recente) >= 4 and hist_recente[0] == hist_recente[1] == hist_recente[2] and hist_recente[3] != hist_recente[0]:
+            sugestao = f"Ciclo 3-1 detectado ({mapear_emojis[hist_recente[0]]}x3 -> {mapear_emojis[hist_recente[3]]}). A IA tende a inverter o ciclo quando as apostas aumentam. Sugestão: Esteja preparado para a inversão."
             return "4. Ciclo 3-1", sugestao
-    
-    # --- Padrão de Armadilha Pós-Ganho ---
-    if len(hist_recente) >= 3 and hist_recente[0] == hist_recente[1] and hist_recente[2] != hist_recente[0]:
-        sugestao = f"Armadilha Pós-Ganho detectada (ex: {mapear_emojis[hist_recente[2]]} -> {mapear_emojis[hist_recente[0]]}, {mapear_emojis[hist_recente[0]]}). A IA força dois resultados opostos após uma vitória para derrubar quem dobra a aposta. Sugestão: Não dobre sua aposta após uma vitória neste momento."
-        return "6. Armadilha Pós-Ganho", sugestao
-    
-    # --- Padrão Espelho ---
-    if len(hist_recente) >= 6 and hist_recente[0:3] == hist_recente[3:6][::-1]:
-        sugestao = f"Padrão Espelho detectado (ex: {mapear_emojis[hist_recente[0]]}{mapear_emojis[hist_recente[1]]}{mapear_emojis[hist_recente[2]]} -> {mapear_emojis[hist_recente[3]]}{mapear_emojis[hist_recente[4]]}{mapear_emojis[hist_recente[5]]}). A IA inverte a sequência para confundir sua leitura. Sugestão: Não confie na repetição exata do padrão."
-        return "7. Espelho", sugestao
 
-    # --- Padrão de Ruído Controlado (se nenhum outro for detectado) ---
-    sugestao = "A sequência parece aleatória, mas a IA pode estar gerando pseudo-aleatoriedade com âncoras ocultas. Sugestão: Cautela, não há padrão claro. Evite apostas pesadas."
-    return "5. Ruído Controlado", sugestao
+        # Padrão de Alternância Simples (Ping-Pong)
+        count_ping_pong = 0
+        if len(hist_recente) >= 2:
+            for i in range(len(hist_recente) - 1):
+                if hist_recente[i] != hist_recente[i+1]:
+                    count_ping_pong += 1
+                else:
+                    break
+        if count_ping_pong >= 4:
+            sugestao = f"Padrão de Ping-Pong detectado com {count_ping_pong + 1} alternâncias. A IA pode quebrar este padrão agora. Sugestão: Aposte contra a alternância (ex: se o último foi {mapear_emojis[hist_recente[0]]}, aposte em {mapear_emojis[hist_recente[0]]} novamente)."
+            return "1. Alternância Simples (Ping-Pong)", sugestao
+        
+        # Padrão de Sequência Estendida
+        count_seq = 0
+        if len(hist_recente) >= 2:
+            for i in range(len(hist_recente)):
+                if hist_recente[i] == hist_recente[0]:
+                    count_seq += 1
+                else:
+                    break
+        if count_seq >= 3:
+            sugestao = f"Sequência estendida de {count_seq} resultados de {mapear_emojis[hist_recente[0]]}. A IA força você a acreditar que 'vai virar'. Sugestão: Mantenha a aposta na continuação até a quebra, ou aguarde a quebra e inverta."
+            return "2. Sequência Estendida", sugestao
+    
+    # --- Padrão de Ruído Controlado / Quântico (Caso nenhum outro se encaixe) ---
+    sugestao = "A sequência parece aleatória. Sugestão: Cautela, não há padrão claro. Evite apostas pesadas."
+    return "8. Ruído Controlado / Quântico", sugestao
 
 # --- Inicialização do estado da sessão ---
 if 'historico' not in st.session_state:
