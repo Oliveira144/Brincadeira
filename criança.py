@@ -8,6 +8,9 @@ st.set_page_config(
     layout="wide"
 )
 
+# --- Variáveis de Mapeamento ---
+mapear_emojis = {'A': '🔵', 'E': '🟡', 'V': '🔴'}
+
 # --- Funções de Análise de Padrões ---
 def analisar_padrao(historico):
     """
@@ -28,8 +31,8 @@ def analisar_padrao(historico):
             else:
                 break
         if count_ping_pong >= 4:
-            sugestao = f"Padrão de Ping-Pong detectado com {count_ping_pong+1} alternâncias. A IA pode quebrar este padrão agora. Sugestão: Aposte contra a alternância (ex: se o último foi {hist_recente[0]}, aposte em {hist_recente[0]} novamente)."
-            return "Padrão 1. Alternância Simples (Ping-Pong)", sugestao
+            sugestao = f"Padrão de Ping-Pong detectado com {count_ping_pong+1} alternâncias. A IA pode quebrar este padrão agora. Sugestão: Aposte contra a alternância (ex: se o último foi {mapear_emojis[hist_recente[0]]}, aposte em {mapear_emojis[hist_recente[0]]} novamente)."
+            return "1. Alternância Simples (Ping-Pong)", sugestao
     
     # --- Padrão de Sequência Estendida ---
     if len(hist_recente) >= 3 and hist_recente[0] == hist_recente[1] == hist_recente[2]:
@@ -40,37 +43,33 @@ def analisar_padrao(historico):
                 count_seq += 1
             else:
                 break
-        sugestao = f"Sequência estendida de {count_seq} resultados de {mapear_cores[repeticao]}. A IA força você a acreditar que 'vai virar'. Sugestão: Mantenha a aposta na continuação até a quebra, ou aguarde a quebra e inverta."
-        return "Padrão 2. Sequência Estendida", sugestao
+        sugestao = f"Sequência estendida de {count_seq} resultados de {mapear_emojis[repeticao]}. A IA força você a acreditar que 'vai virar'. Sugestão: Mantenha a aposta na continuação até a quebra, ou aguarde a quebra e inverta."
+        return "2. Sequência Estendida", sugestao
     
     # --- Padrão de Âncora com Empate ---
     if len(hist_recente) >= 3 and 'E' in hist_recente[:3] and hist_recente[0] != 'E' and hist_recente[2] != 'E' and hist_recente[1] == 'E':
-        sugestao = f"Empate (🟡) inserido no meio da sequência. A IA usa o empate para resetar a leitura e quebrar ciclos mentais. Sugestão: Reavalie o padrão. A tendência pode mudar agora."
-        return "Padrão 3. Âncora com Empate", sugestao
+        sugestao = f"Empate ({mapear_emojis['E']}) inserido no meio da sequência. A IA usa o empate para resetar a leitura e quebrar ciclos mentais. Sugestão: Reavalie o padrão. A tendência pode mudar agora."
+        return "3. Âncora com Empate", sugestao
     
     # --- Padrão Camuflado de Ciclo 3-1 ---
     if len(hist_recente) >= 4:
         if (hist_recente[0:3] == [hist_recente[0], hist_recente[0], hist_recente[0]] and hist_recente[3] != hist_recente[0]):
-            sugestao = f"Ciclo 3-1 detectado ({mapear_cores[hist_recente[0]]}, {mapear_cores[hist_recente[0]]}, {mapear_cores[hist_recente[0]]}, {mapear_cores[hist_recente[3]]}). A IA tende a inverter o ciclo quando as apostas aumentam. Sugestão: Esteja preparado para a inversão."
-            return "Padrão 4. Ciclo 3-1", sugestao
+            sugestao = f"Ciclo 3-1 detectado ({mapear_emojis[hist_recente[0]]}, {mapear_emojis[hist_recente[0]]}, {mapear_emojis[hist_recente[0]]}, {mapear_emojis[hist_recente[3]]}). A IA tende a inverter o ciclo quando as apostas aumentam. Sugestão: Esteja preparado para a inversão."
+            return "4. Ciclo 3-1", sugestao
     
     # --- Padrão de Armadilha Pós-Ganho ---
     if len(hist_recente) >= 3 and hist_recente[0] == hist_recente[1] and hist_recente[2] != hist_recente[0]:
-        sugestao = f"Armadilha Pós-Ganho detectada (ex: {mapear_cores[hist_recente[2]]} -> {mapear_cores[hist_recente[0]]}, {mapear_cores[hist_recente[0]]}). A IA força dois resultados opostos após uma vitória para derrubar quem dobra a aposta. Sugestão: Não dobre sua aposta após uma vitória neste momento."
-        return "Padrão 6. Armadilha Pós-Ganho", sugestao
+        sugestao = f"Armadilha Pós-Ganho detectada (ex: {mapear_emojis[hist_recente[2]]} -> {mapear_emojis[hist_recente[0]]}, {mapear_emojis[hist_recente[0]]}). A IA força dois resultados opostos após uma vitória para derrubar quem dobra a aposta. Sugestão: Não dobre sua aposta após uma vitória neste momento."
+        return "6. Armadilha Pós-Ganho", sugestao
     
     # --- Padrão Espelho ---
     if len(hist_recente) >= 6 and hist_recente[0:3] == hist_recente[3:6][::-1]:
-        sugestao = f"Padrão Espelho detectado (ex: {hist_recente[0]}{hist_recente[1]}{hist_recente[2]} -> {hist_recente[3]}{hist_recente[4]}{hist_recente[5]}). A IA inverte a sequência para confundir sua leitura. Sugestão: Não confie na repetição exata do padrão."
-        return "Padrão 7. Espelho", sugestao
+        sugestao = f"Padrão Espelho detectado (ex: {mapear_emojis[hist_recente[0]]}{mapear_emojis[hist_recente[1]]}{mapear_emojis[hist_recente[2]]} -> {mapear_emojis[hist_recente[3]]}{mapear_emojis[hist_recente[4]]}{mapear_emojis[hist_recente[5]]}). A IA inverte a sequência para confundir sua leitura. Sugestão: Não confie na repetição exata do padrão."
+        return "7. Espelho", sugestao
 
     # --- Padrão de Ruído Controlado (se nenhum outro for detectado) ---
     sugestao = "A sequência parece aleatória, mas a IA pode estar gerando pseudo-aleatoriedade com âncoras ocultas. Sugestão: Cautela, não há padrão claro. Evite apostas pesadas."
-    return "Padrão 5. Ruído Controlado", sugestao
-
-# --- Variáveis de Mapeamento ---
-mapear_cores = {'A': 'Azul', 'E': 'Amarelo', 'V': 'Vermelho'}
-mapear_emojis = {'A': '🔵', 'E': '🟡', 'V': '🔴'}
+    return "5. Ruído Controlado", sugestao
 
 # --- Inicialização do estado da sessão ---
 if 'historico' not in st.session_state:
@@ -106,8 +105,7 @@ with col5:
 st.markdown("---")
 
 st.markdown("### 2. Histórico de Resultados")
-# Exibe o histórico de forma horizontal
-historico_str = " ".join([mapear_emojis[r] for r in st.session_state.historico])
+historico_str = " ".join([mapear_emojis[r] for r in reversed(st.session_state.historico)])
 st.markdown(f"**Mais Recente → Mais Antigo:** {historico_str}")
 
 st.markdown("---")
