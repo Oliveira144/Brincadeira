@@ -18,7 +18,8 @@ def analisar_padrao(historico):
     A lógica agora prioriza a análise de padrões de Empate.
     """
     if len(historico) < 2:
-        return "Nenhum Padrão Detectado", "Insira mais resultados para iniciar a análise."
+        # CORREÇÃO AQUI: Retorna 3 valores para evitar o erro.
+        return "Nenhum Padrão Detectado", "Aguardando...", "Insira mais resultados para iniciar a análise."
 
     # Invertemos o histórico para analisar do mais recente para o mais antigo
     hist_recente = list(historico)[::-1]
